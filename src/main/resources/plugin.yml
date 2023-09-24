@@ -1,0 +1,3 @@
+name: ConodiaSpawner
+version: '${version}'
+main: fr.pandaguerrier.conodiaspawner.ConodiaSpawner
