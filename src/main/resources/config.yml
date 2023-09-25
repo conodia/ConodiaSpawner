@@ -1,0 +1,61 @@
+levels:
+  - id: 1
+    spawnCount: 4
+    spawnDelayMin: 200
+    spawnDelayMax: 400
+    spawnRange: 16
+    price: 5000
+  - id: 2
+    spawnCount: 6
+    spawnDelayMin: 100
+    spawnDelayMax: 200
+    spawnRange: 16
+    price: 5000
+  - id: 3
+    spawnCount: 4
+    spawnDelayMin: 200
+    spawnDelayMax: 400
+    spawnRange: 16
+    price: 5000
+  - id: 4
+    spawnCount: 6
+    spawnDelayMin: 100
+    spawnDelayMax: 200
+    spawnRange: 16
+    price: 5000
+  - id: 5
+    spawnCount: 4
+    spawnDelayMin: 200
+    spawnDelayMax: 400
+    spawnRange: 16
+    price: 5000
+  - id: 6
+    spawnCount: 6
+    spawnDelayMin: 100
+    spawnDelayMax: 200
+    spawnRange: 16
+    price: 5000
+  - id: 7
+    spawnCount: 4
+    spawnDelayMin: 200
+    spawnDelayMax: 400
+    spawnRange: 16
+    price: 5000
+  - id: 8
+    spawnCount: 6
+    spawnDelayMin: 100
+    spawnDelayMax: 200
+    spawnRange: 16
+    price: 5000
+  - id: 9
+    spawnCount: 4
+    spawnDelayMin: 200
+    spawnDelayMax: 400
+    spawnRange: 16
+    price: 5000
+  - id: 10
+    spawnCount: 6
+    spawnDelayMin: 100
+    spawnDelayMax: 200
+    spawnRange: 16
+    price: 5000

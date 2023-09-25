@@ -2,21 +2,21 @@ package fr.pandaguerrier.conodiaspawner.managers;
 
 import org.bukkit.entity.Player;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PlayerSpawner {
   private final Player player;
-  private final List<Spawner> spawners;
+  private final Map<Integer, Spawner> spawners = new HashMap<>();
 
-  public PlayerSpawner(Player player, List<Spawner> spawners) {
+  public PlayerSpawner(Player player) {
     this.player = player;
-    this.spawners = spawners;
   }
 
   public Player getPlayer() {
     return player;
   }
-  public List<Spawner> getSpawners() {
+  public Map<Integer, Spawner> getSpawners() {
     return spawners;
   }
 }
