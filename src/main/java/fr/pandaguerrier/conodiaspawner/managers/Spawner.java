@@ -2,15 +2,18 @@ package fr.pandaguerrier.conodiaspawner.managers;
 
 import fr.pandaguerrier.conodiagameapi.ConodiaGameAPI;
 import fr.pandaguerrier.conodiaspawner.ConodiaSpawner;
+import fr.pandaguerrier.conodiaspawner.utils.ItemBuilder;
 import net.minecraft.server.v1_8_R3.MobSpawnerAbstract;
 import net.minecraft.server.v1_8_R3.NBTTagCompound;
 import net.minecraft.server.v1_8_R3.TileEntityMobSpawner;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.craftbukkit.v1_8_R3.block.CraftCreatureSpawner;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.Inventory;
 import org.json.simple.JSONObject;
 
 public class Spawner {
@@ -32,6 +35,7 @@ public class Spawner {
     JSONObject payload = (JSONObject) ConodiaGameAPI.getInstance().getApiManager().post("/spawners/" + this.owner.getPlayer().getUniqueId().toString(), this.toJson()).get("spawner");
     this.id = Integer.parseInt(payload.get("id").toString());
     this.owner.getSpawners().putIfAbsent(this.id, this);
+    ConodiaSpawner.getInstance().getPlayerSpawners().replace(this.owner.getPlayer().getUniqueId(), this.owner);
   }
 
   // Va servir a mettre le spawner dans le monde
@@ -43,8 +47,6 @@ public class Spawner {
     // todo reprendre depuis la config
     spawner.setDelay(2);
     spawner.update();
-
-    this.update();
   }
 
   public void upgrade() {
@@ -71,6 +73,17 @@ public class Spawner {
     if(this.location != null) {
       this.deleteBlock();
     }
+  }
+
+  public void openGui() {
+    Inventory inv = Bukkit.createInventory(null, 9 * 5, "§8Spawner §7- §8ID: " + this.id);
+
+    inv.setItem(21, new ItemBuilder(Material.PAPER).setName("§aInformations sur votre spawner").setLore("§8§m------------------------------------", "", "§bID: " + this.id, "§bLevel: " + this.level, "", "§8§m------------------------------------").build());
+    // todo: prendre le prix depuis la config
+    inv.setItem(22, new ItemBuilder(Material.EMERALD).setName("§eUpgrade votre spawner: §6" + level + " §e> " + (level + 1)).setLore("§8§m------------------------------------", "", "§eCette opération vous coutera: §6//TODO$ !").build());
+    inv.setItem(40, new ItemBuilder(Material.BARRIER).setName("§cSupprimer").setLore("§cCLick gauche pour supprimer ce spawner (Il ne sera pas supprimé, juste le block)").build());
+
+    this.owner.getPlayer().openInventory(inv);
   }
 
   private void updateDelay(int delay) {

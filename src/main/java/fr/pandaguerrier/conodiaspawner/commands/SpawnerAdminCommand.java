@@ -1,5 +1,6 @@
 package fr.pandaguerrier.conodiaspawner.commands;
 
+import fr.pandaguerrier.conodiaspawner.ConodiaSpawner;
 import fr.pandaguerrier.conodiaspawner.managers.PlayerSpawner;
 import fr.pandaguerrier.conodiaspawner.managers.Spawner;
 import org.bukkit.command.Command;
@@ -13,10 +14,10 @@ import java.util.List;
 public class SpawnerAdminCommand implements TabExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String s, String[] strings) {
-    PlayerSpawner playerSpawner = new PlayerSpawner((Player) sender);
+    PlayerSpawner playerSpawner = ConodiaSpawner.getInstance().getPlayerSpawners().get(((Player) sender).getUniqueId());
     Spawner spawner = new Spawner(0, playerSpawner, EntityType.ZOMBIE, 0, null);
-    spawner.create();
     spawner.setLevel(6);
+    spawner.create();
 
     sender.sendMessage("§aVous avez reçu un spawner zombie.");
     return false;

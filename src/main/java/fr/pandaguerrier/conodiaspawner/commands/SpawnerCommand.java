@@ -4,6 +4,7 @@ import fr.pandaguerrier.conodiaspawner.ConodiaSpawner;
 import fr.pandaguerrier.conodiaspawner.Constants;
 import fr.pandaguerrier.conodiaspawner.managers.PlayerSpawner;
 import fr.pandaguerrier.conodiaspawner.managers.Spawner;
+import fr.pandaguerrier.conodiaspawner.utils.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -32,12 +33,12 @@ public class SpawnerCommand implements TabExecutor {
     Inventory inventory = Bukkit.createInventory(null, 9, Constants.GUI_NAME);
 
     for (Spawner spawner : playerSpawner.getSpawners().values()) {
-      ItemStack itemStack = new ItemStack(Material.MOB_SPAWNER);
-      ItemMeta itemMeta = itemStack.getItemMeta();
-      itemMeta.setDisplayName("ID: " + spawner.getId());
-      itemStack.setItemMeta(itemMeta);
+      ItemBuilder itemBuilder = new ItemBuilder(Material.MOB_SPAWNER);
+      itemBuilder.setName("ID: " + spawner.getId());
+      itemBuilder.setLore("§aType: " + spawner.getType().name(), "§aLevel: " + spawner.getLevel(), "", "§bPlacé: " + (spawner.isPlaced() ? "§aOui" : "§cNon"), (spawner.isPlaced() ? "§aX: " + spawner.getLocation().getX() + " §aY: " + spawner.getLocation().getY() + " §aZ: " + spawner.getLocation().getZ() : ""), "", "§aCliquez pour sélectionner ce spawner.");
+      itemBuilder.setGlow(spawner.isPlaced());
 
-      inventory.addItem(itemStack);
+      inventory.addItem(itemBuilder.build());
     }
 
     ((Player) sender).openInventory(inventory);
