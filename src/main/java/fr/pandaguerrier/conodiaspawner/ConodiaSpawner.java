@@ -7,7 +7,9 @@ import fr.pandaguerrier.conodiaspawner.events.PlayerListener;
 import fr.pandaguerrier.conodiaspawner.events.SpawnerListener;
 import fr.pandaguerrier.conodiaspawner.managers.PlayerSpawner;
 import fr.pandaguerrier.conodiaspawner.managers.Spawner;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Location;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
@@ -19,10 +21,18 @@ public final class ConodiaSpawner extends JavaPlugin {
     private final Map<Location, Spawner> placedSpawners = new HashMap<>();
     private final Map<UUID, PlayerSpawner> playerSpawners = new HashMap<>();
     private final Map<UUID, Spawner> waitingPlaceSpawners = new HashMap<>();
+    private static Economy econ = null;
 
     @Override
     public void onEnable() {
         instance = this;
+
+        if (!setupEconomy() ) {
+            getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         saveDefaultConfig();
 
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
@@ -37,6 +47,19 @@ public final class ConodiaSpawner extends JavaPlugin {
     public void onDisable() {
     }
 
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+
+        econ = rsp.getProvider();
+        return econ != null;
+    }
+
     public static ConodiaSpawner getInstance() {
         return instance;
     }
@@ -48,5 +71,8 @@ public final class ConodiaSpawner extends JavaPlugin {
     }
     public Map<UUID, Spawner> getWaitingPlaceSpawners() {
         return waitingPlaceSpawners;
+    }
+    public static Economy getEconomy() {
+        return econ;
     }
 }

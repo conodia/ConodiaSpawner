@@ -1,15 +1,21 @@
 package fr.pandaguerrier.conodiaspawner.events;
 
+import com.massivecraft.factions.listeners.FactionsBlockListener;
+import fr.pandaguerrier.conodiagameapi.ConodiaGameAPI;
 import fr.pandaguerrier.conodiaspawner.ConodiaSpawner;
+import fr.pandaguerrier.conodiaspawner.managers.PlayerSpawner;
 import fr.pandaguerrier.conodiaspawner.managers.Spawner;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.json.simple.JSONObject;
 
 public class SpawnerListener implements Listener {
   @EventHandler
@@ -19,14 +25,14 @@ public class SpawnerListener implements Listener {
       event.setCancelled(true);
 
       if(!canPose(event.getClickedBlock().getLocation(), player)){
-        player.sendMessage("§cVous ne pouvez pas poser un spawner ici.");
+        player.sendMessage("§cVous ne pouvez pas poser un spawner ici, vous pouvez uniquement poser des spawners sur un block de §4COBBLESTONE§c.");
         return;
       }
 
       Spawner spawner = ConodiaSpawner.getInstance().getWaitingPlaceSpawners().get(player.getUniqueId());
 
       if (spawner.isPlaced()) {
-        spawner.deleteBlock();
+        spawner.deleteBlock(false);
       }
 
       spawner.setLocation(event.getClickedBlock().getLocation());
@@ -55,6 +61,33 @@ public class SpawnerListener implements Listener {
   }
 
   @EventHandler
+  public void onExplode(EntityExplodeEvent event) {
+    for (Block block : event.blockList()) {
+      if(!block.getType().equals(Material.MOB_SPAWNER)) {
+        continue;
+      }
+
+      JSONObject payload = ConodiaGameAPI.getInstance().getApiManager().get("/spawners/coords/" + block.getLocation().getBlockX() + "/" + block.getLocation().getBlockY() + "/" + block.getLocation().getBlockZ() + "/" + block.getLocation().getWorld().getName(), new JSONObject());
+
+      if(payload == null) {
+        continue;
+      }
+
+      Spawner spawner = Spawner.from((JSONObject) payload.get("spawner"), null);
+
+      if(spawner.isPremium()) {
+        event.blockList().remove(block); // remove le block premium
+        return;
+      }
+
+      spawner.setLocation(null);
+      spawner.update();
+      ConodiaSpawner.getInstance().getPlacedSpawners().remove(spawner.getLocation());
+      return;
+    }
+  }
+
+  @EventHandler
   public void onInteract(PlayerInteractEvent event) {
     if(event.getAction().equals(Action.RIGHT_CLICK_BLOCK) && event.getClickedBlock().getType().equals(Material.MOB_SPAWNER)) {
       Spawner spawner = ConodiaSpawner.getInstance().getPlacedSpawners().get(event.getClickedBlock().getLocation());
@@ -66,11 +99,7 @@ public class SpawnerListener implements Listener {
   }
 
   private boolean canPose(Location location, Player player) {
-    Material block = location.getBlock().getType();
-    if(block.equals(Material.BEDROCK) || block.equals(Material.BARRIER)){
-      player.sendMessage("§cVous ne pouvez pas poser un spawner ici.");
-      return false;
-    }
-    return true;
+    Block block = location.getBlock();
+    return block.getType().equals(Material.COBBLESTONE) && FactionsBlockListener.playerCanBuildDestroyBlock(player, location, "build", true);
   }
 }

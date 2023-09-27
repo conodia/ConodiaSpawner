@@ -15,7 +15,7 @@ public class SpawnerAdminCommand implements TabExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String s, String[] strings) {
     PlayerSpawner playerSpawner = ConodiaSpawner.getInstance().getPlayerSpawners().get(((Player) sender).getUniqueId());
-    Spawner spawner = new Spawner(0, playerSpawner, EntityType.ZOMBIE, 0, null);
+    Spawner spawner = new Spawner(0, playerSpawner, EntityType.ZOMBIE, 0, null, true);
     spawner.setLevel(6);
     spawner.create();
 

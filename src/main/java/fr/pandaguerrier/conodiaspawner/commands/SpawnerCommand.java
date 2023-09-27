@@ -34,8 +34,8 @@ public class SpawnerCommand implements TabExecutor {
 
     for (Spawner spawner : playerSpawner.getSpawners().values()) {
       ItemBuilder itemBuilder = new ItemBuilder(Material.MOB_SPAWNER);
-      itemBuilder.setName("ID: " + spawner.getId());
-      itemBuilder.setLore("§aType: " + spawner.getType().name(), "§aLevel: " + spawner.getLevel(), "", "§bPlacé: " + (spawner.isPlaced() ? "§aOui" : "§cNon"), (spawner.isPlaced() ? "§aX: " + spawner.getLocation().getX() + " §aY: " + spawner.getLocation().getY() + " §aZ: " + spawner.getLocation().getZ() : ""), "", "§aCliquez pour sélectionner ce spawner.");
+      itemBuilder.setName("§2ID: " + spawner.getId());
+      itemBuilder.setLore("§aType: " + spawner.getType().name(), "§aLevel: " + spawner.getLevel(), "", "§bPlacé: " + (spawner.isPlaced() ? "§aOui" : "§cNon"), (spawner.isPlaced() ? "§aX: " + spawner.getLocation().getX() + " §aY: " + spawner.getLocation().getY() + " §aZ: " + spawner.getLocation().getZ() : ""), "", "§aPremium: " + (spawner.isPremium() ? "§2Oui :)" : "§cNon :("), "§8Premium = Si le spawneur peut être cassé ou non, ou d'autre avantages.", "", "§aCliquez pour sélectionner ce spawner.");
       itemBuilder.setGlow(spawner.isPlaced());
 
       inventory.addItem(itemBuilder.build());
