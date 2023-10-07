@@ -1,6 +1,7 @@
 name: ConodiaSpawner
 version: '${version}'
 main: fr.pandaguerrier.conodiaspawner.ConodiaSpawner
+softdepend: [HolographicDisplays]
 commands:
   spawneradmin:
     description: Admin command for ConodiaSpawner

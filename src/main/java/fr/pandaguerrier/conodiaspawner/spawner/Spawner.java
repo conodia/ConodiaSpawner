@@ -1,10 +1,10 @@
-package fr.pandaguerrier.conodiaspawner.managers;
+package fr.pandaguerrier.conodiaspawner.spawner;
 
 import fr.pandaguerrier.conodiagameapi.ConodiaGameAPI;
 import fr.pandaguerrier.conodiaspawner.ConodiaSpawner;
-import fr.pandaguerrier.conodiaspawner.Constants;
-import fr.pandaguerrier.conodiaspawner.objects.LevelConfiguration;
-import fr.pandaguerrier.conodiaspawner.utils.ItemBuilder;
+import fr.pandaguerrier.conodiaspawner.builder.ItemBuilder;
+import fr.pandaguerrier.conodiaspawner.spawner.level.SpawnerLevel;
+import fr.pandaguerrier.conodiaspawner.spawner.player.PlayerSpawner;
 import fr.pandaguerrier.conodiaspawner.utils.Utils;
 import net.minecraft.server.v1_8_R3.MobSpawnerAbstract;
 import net.minecraft.server.v1_8_R3.NBTTagCompound;
@@ -18,6 +18,7 @@ import org.bukkit.block.CreatureSpawner;
 import org.bukkit.craftbukkit.v1_8_R3.block.CraftCreatureSpawner;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.json.simple.JSONObject;
 
 import javax.annotation.Nullable;
@@ -28,10 +29,8 @@ public class Spawner {
   private EntityType type;
   private int level;
   private Location location;
-
   private boolean isPremium;
-
-
+  
   public Spawner(int id, @Nullable PlayerSpawner owner, EntityType type, int level, Location location, boolean isPremium) {
     this.id = id;
     this.owner = owner;
@@ -42,39 +41,41 @@ public class Spawner {
   }
 
   public void create() {
-    JSONObject payload = (JSONObject) ConodiaGameAPI.getInstance().getApiManager().post("/spawners/" + this.owner.getPlayer().getUniqueId().toString(), this.toJson()).get("spawner");
+    JSONObject payload = (JSONObject) ConodiaGameAPI.getInstance().getApiManager().post("/spawners/" + owner.getPlayer().getUniqueId().toString(), this.toJson()).get("spawner");
     this.id = Integer.parseInt(payload.get("id").toString());
     this.owner.getSpawners().putIfAbsent(this.id, this);
-    ConodiaSpawner.getInstance().getPlayerSpawners().replace(this.owner.getPlayer().getUniqueId(), this.owner);
   }
 
   // Va servir a mettre le spawner dans le monde
   public void spawn() {
     Block block = this.location.getBlock();
     block.setType(Material.MOB_SPAWNER);
+
     CreatureSpawner spawner = (CreatureSpawner) block.getState();
     spawner.setSpawnedType(this.type);
-    LevelConfiguration levelConfiguration = Utils.getLevelConfig(this.level);
+
+    SpawnerLevel spawnerLevel = Utils.getLevelConfig(this.level);
     spawner.update();
-    setSpawnCount((short) levelConfiguration.getSpawnCount());
-    updateSpawnerDelay((short) levelConfiguration.getDelay());
+
+    setSpawnCount((short) spawnerLevel.getSpawnCount());
+    updateSpawnerDelay((short) spawnerLevel.getDelay());
 
     ConodiaSpawner.getInstance().getPlacedSpawners().put(this.location, this);
   }
 
   public void upgrade() {
-    LevelConfiguration levelConfiguration = Utils.getLevelConfig(this.level + 1);
-    if (ConodiaSpawner.getEconomy().getBalance(this.owner.getPlayer()) < levelConfiguration.getPrice()) {
-      this.owner.getPlayer().sendMessage("§cVous n'avez pas assez d'argent pour améliorer votre spawner !");
+    SpawnerLevel spawnerLevel = Utils.getLevelConfig(this.level + 1);
+    if (ConodiaSpawner.getEconomy().getBalance(owner.getPlayer()) < spawnerLevel.getPrice()) {
+      owner.getPlayer().sendMessage("§cVous n'avez pas assez d'argent pour améliorer votre spawner !");
       return;
     }
-
-    ConodiaSpawner.getEconomy().withdrawPlayer(this.owner.getPlayer(), levelConfiguration.getPrice());
-    this.owner.getPlayer().sendMessage("§aVous avez amélioré votre spawner au niveau supérieur: §2" + (this.level + 1) + "§a !");
-    this.owner.getPlayer().playSound(this.owner.getPlayer().getLocation(), Sound.LEVEL_UP, 1, 1);
-    this.owner.getPlayer().sendTitle("§aAmélioration !", "§2" + (this.level) + "§a>>>§2" + (this.level + 1));
-
     this.level++;
+
+    ConodiaSpawner.getEconomy().withdrawPlayer(owner.getPlayer(), spawnerLevel.getPrice());
+    owner.getPlayer().sendMessage("§aVous avez amélioré votre spawner au niveau supérieur: §2" + (this.level) + "§a !");
+    owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.LEVEL_UP, 1, 1);
+    owner.getPlayer().sendTitle("§aAmélioration du spawner !", "§2" + (this.level - 1) + " §a>>>§2 " + (this.level));
+
     Block block = this.location.getBlock();
     block.setType(Material.AIR);
     this.spawn();
@@ -89,8 +90,8 @@ public class Spawner {
     if (save) {
       this.update();
     }
+
     ConodiaSpawner.getInstance().getPlacedSpawners().remove(this.location);
-    //this.owner.getPlayer().sendMessage("§aVous avez enlevé votre spawner.\n\n§8ID: " + id + "\n§8Type: " + type.toString() + "\n§8Level: " + level);
   }
 
   public void update() {
@@ -99,32 +100,47 @@ public class Spawner {
 
   public void delete() {
     ConodiaGameAPI.getInstance().getApiManager().destroy("/spawners/" + this.id, new JSONObject());
-    owner.getSpawners().remove(this.id);
+
+    if(owner != null) {
+      owner.getSpawners().remove(this.id);
+    }
 
     if (this.location != null) {
       this.deleteBlock(false);
     }
   }
 
+  public ItemStack toItem() {
+    ItemBuilder item  = new ItemBuilder(Material.MOB_SPAWNER);
+    item.setName("§bSpawner à " + this.getType());
+    item.setLore("§9Level: §b" + this.getLevel(), "", "§aClique droit pour récupérer le spawner.", "§8ID: " + this.id);
+    item.setGlow(true);
+
+    return item.build();
+  }
+
   public void openGui() {
-    Inventory inv = Bukkit.createInventory(null, 9 * 5, Constants.GUI_NAME_SPAWNER + this.id);
-    LevelConfiguration levelConfiguration = Utils.getLevelConfig(this.level);
-    LevelConfiguration nextLevelConfiguration = Utils.getLevelConfig(this.level + 1);
+    Inventory inv = Bukkit.createInventory(null, 9 * 5, Utils.GUI_NAME_SPAWNER + this.id);
+    SpawnerLevel spawnerLevel = Utils.getLevelConfig(this.level);
+    assert this.owner != null;
 
     Utils.setBorders(inv);
-    inv.setItem(21, new ItemBuilder(Material.PAPER).setName("§aInformations sur votre spawner").setLore("§8§m------------------------------------", "", "§bID: " + this.id, "§bLevel: " + this.level, "", "§aAvantages actuels: ", "", "§2Delai de spawn: §a" + levelConfiguration.getDelay() + "s ", "§2Nombre de mobs / spawn: §a" + levelConfiguration.getSpawnCount(), "§2Activation du spawner: §a" + levelConfiguration.getSpawnRange() + " blocks", "§2Premium: (Si le spawner est cassable ou non) " + (isPremium ? "§aOui" : "§cNon"), "", "§8§m------------------------------------").build());
-    if (this.level < 10) {
-      if (ConodiaSpawner.getEconomy().getBalance(this.owner.getPlayer()) >= nextLevelConfiguration.getPrice()) {
-        inv.setItem(23, new ItemBuilder(Material.EMERALD).setName("§eUpgrade votre spawner: §6" + level + " §e➜ §6" + (level + 1)).setLore("§8§m------------------------------------", "", "§eCette opération vous coutera: §6" + ConodiaSpawner.getEconomy().format(nextLevelConfiguration.getPrice()) + "$§e !", "", "§aAvantages: ", "", "§2Delai de spawn: §a" + nextLevelConfiguration.getDelay() + "s ", "§2Nombre de mobs / spawn: §a" + nextLevelConfiguration.getSpawnCount(), "§2Activation du spawner: §a" + nextLevelConfiguration.getSpawnRange() + " blocks").setGlow(true).build());
+    inv.setItem(21, new ItemBuilder(Material.PAPER).setName("§aInformations sur votre spawner").setLore("§8§m------------------------------------", "", "§bID: " + this.id, "§bLevel: " + this.level, "", "§aAvantages actuels: ", "", "§2Delai de spawn: §a" + spawnerLevel.getDelay() + "s ", "§2Nombre de mobs / spawn: §a" + spawnerLevel.getSpawnCount(), "§2Activation du spawner: §a" + spawnerLevel.getSpawnRange() + " blocks", "§2Premium: (Si le spawner est cassable ou non) " + (isPremium ? "§aOui" : "§cNon"), "", "§8§m------------------------------------").build());
+    if (this.level + 1 <= Utils.MAX_LEVEL) {
+      System.out.println(this.level);
+      SpawnerLevel nextSpawnerLevel = Utils.getLevelConfig(this.level + 1);
+      if (ConodiaSpawner.getEconomy().getBalance(owner.getPlayer()) >= nextSpawnerLevel.getPrice()) {
+        inv.setItem(23, new ItemBuilder(Material.EMERALD).setName("§eUpgrade votre spawner: §6" + level + " §e➜ §6" + (level + 1)).setLore("§8§m------------------------------------", "", "§eCette opération vous coutera: §6" + ConodiaSpawner.getEconomy().format(nextSpawnerLevel.getPrice()) + "$§e !", "", "§aAvantages: ", "", "§2Delai de spawn: §a" + nextSpawnerLevel.getDelay() + "s ", "§2Nombre de mobs / spawn: §a" + nextSpawnerLevel.getSpawnCount(), "§2Activation du spawner: §a" + nextSpawnerLevel.getSpawnRange() + " blocks").setGlow(true).build());
       } else {
-        inv.setItem(23, new ItemBuilder(Material.REDSTONE).setName("§eUpgrade votre spawner: §6" + level + " §e➜ §6" + (level + 1)).setLore("§8§m------------------------------------", "", "§cVous n'avez pas assez d'argent pour faire cette opération !", "§cCoût: §4" + ConodiaSpawner.getEconomy().format(nextLevelConfiguration.getPrice()) + "$", "§8§m------------------------------------").build());
+        inv.setItem(23, new ItemBuilder(Material.REDSTONE).setName("§eUpgrade votre spawner: §6" + level + " §e➜ §6" + (level + 1)).setLore("§8§m------------------------------------", "", "§cVous n'avez pas assez d'argent pour faire cette opération !", "§cCoût: §4" + ConodiaSpawner.getEconomy().format(nextSpawnerLevel.getPrice()) + "$", "§8§m------------------------------------").build());
       }
     } else {
-      inv.setItem(23, new ItemBuilder(Material.EMERALD).setName("§cVotre spawner est déjà au niveau maximum !").setGlow(true).build());
+      inv.setItem(23, new ItemBuilder(Material.REDSTONE_BLOCK).setName("§cVotre spawner est déjà au niveau maximum !").setGlow(true).build());
     }
-    inv.setItem(40, new ItemBuilder(Material.BARRIER).setName("§cSupprimer").setLore("", "§cClick gauche pour supprimer ce spawner (Il ne sera pas supprimé, juste le block)").build());
+    inv.setItem(39, new ItemBuilder(Material.BARRIER).setName("§4Supprimer").setLore("", "§cClick gauche pour supprimer ce spawner (Il ne sera pas supprimé, juste le block)").build());
+    inv.setItem(41, new ItemBuilder(Material.BUCKET).setName("§cRécupérer le spawner en item").setLore("", "§cClick gauche pour récuperer le spawner.").build());
 
-    this.owner.getPlayer().openInventory(inv);
+    owner.getPlayer().openInventory(inv);
   }
 
   private void updateSpawnerDelay(short delay) {
@@ -149,7 +165,7 @@ public class Spawner {
     NBTTagCompound tag = new NBTTagCompound();
     tems.b(tag);
     tag.setShort("SpawnCount", count);
-    //player.sendMessage("count = " + tag.getShort("SpawnCount"));
+    //owner.getPlayer().sendMessage("count = " + tag.getShort("SpawnCount"));
     msa.a(tag);
   }
 

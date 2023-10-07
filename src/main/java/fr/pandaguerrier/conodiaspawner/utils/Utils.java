@@ -1,23 +1,20 @@
 package fr.pandaguerrier.conodiaspawner.utils;
 
 import fr.pandaguerrier.conodiaspawner.ConodiaSpawner;
-import fr.pandaguerrier.conodiaspawner.objects.LevelConfiguration;
+import fr.pandaguerrier.conodiaspawner.configuration.LevelConfiguration;
+import fr.pandaguerrier.conodiaspawner.spawner.level.SpawnerLevel;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
-import java.util.HashMap;
 
 public class Utils {
-  private static final FileConfiguration configuration = ConodiaSpawner.getInstance().getConfig();
+  public static String GUI_NAME = "§7Spawners";
+  public static String GUI_NAME_SPAWNER = "§8Spawner §7- §8ID: ";
+  public static int MAX_LEVEL = 10;
 
-  public static LevelConfiguration getLevelConfig(int level) {
-     HashMap<String, Integer> levelConfig = (HashMap<String, Integer>) configuration.getList("levels").get(level);
-     return new LevelConfiguration(levelConfig.get("spawnCount"), levelConfig.get("spawnRange"), levelConfig.get("delay"), levelConfig.get("price"));
-  }
 
   public static ItemStack createGuiItem(Material material, String name, int data, String... lore) {
     ItemStack item = new ItemStack(material, 1, (short) data);
@@ -41,5 +38,10 @@ public class Utils {
     inv.setItem(35, Utils.createGuiItem(Material.STAINED_GLASS_PANE, "", 3, ""));
     inv.setItem(43, Utils.createGuiItem(Material.STAINED_GLASS_PANE, "", 3, ""));
     inv.setItem(44, Utils.createGuiItem(Material.INK_SACK, "§cRetour", 1, ""));
+  }
+
+  public static SpawnerLevel getLevelConfig(int level) {
+    LevelConfiguration levelConfiguration = ConodiaSpawner.getInstance().getLevelConfiguration();
+    return levelConfiguration.getSpawnerLevels().get(level);
   }
 }

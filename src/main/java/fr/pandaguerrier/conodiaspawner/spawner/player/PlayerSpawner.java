@@ -1,5 +1,6 @@
-package fr.pandaguerrier.conodiaspawner.managers;
+package fr.pandaguerrier.conodiaspawner.spawner.player;
 
+import fr.pandaguerrier.conodiaspawner.spawner.Spawner;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;

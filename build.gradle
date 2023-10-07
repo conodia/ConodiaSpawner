@@ -10,7 +10,9 @@ repositories {
     maven { url "https://oss.sonatype.org/content/groups/public/" }
     maven { url "https://repo.maven.apache.org/maven2" }
     maven { url 'https://jitpack.io' }
-
+    maven {
+        url "https://repo.codemc.io/repository/maven-public/"
+    }
     maven {
         name = 'papermc'
         url = 'https://repo.papermc.io/repository/maven-public/'
@@ -25,6 +27,7 @@ dependencies {
 //    // https://mvnrepository.com/artifact/com.github.azbh111/spigot-1.8.8
     implementation group: 'com.github.azbh111', name: 'spigot-1.8.8', version: 'R'
     extraLibs group: 'org.java-websocket', name: 'Java-WebSocket', version: '1.5.3'
+    extraLibs 'me.filoghost.holographicdisplays:holographicdisplays-api:3.0.0'
     implementation fileTree(dir: '/home/panda/IdeaProjects/libs', include: '*.jar')
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
 

@@ -1,12 +1,12 @@
-package fr.pandaguerrier.conodiaspawner.objects;
+package fr.pandaguerrier.conodiaspawner.spawner.level;
 
-public class LevelConfiguration {
-  int spawnCount;
-  int spawnRange;
-  int delay;
-  int price;
+public class SpawnerLevel {
+  private final int spawnCount;
+  private final int spawnRange;
+  private final int delay;
+  private final int price;
 
-  public LevelConfiguration(int spawnCount, int spawnRange, int delay, int price) {
+  public SpawnerLevel(int spawnCount, int spawnRange, int delay, int price) {
     this.spawnCount = spawnCount;
     this.spawnRange = spawnRange;
     this.delay = delay;
@@ -24,8 +24,5 @@ public class LevelConfiguration {
   }
   public int getPrice() {
     return price;
-  }
-  public void setSpawnCount(int spawnCount) {
-    this.spawnCount = spawnCount;
   }
 }
