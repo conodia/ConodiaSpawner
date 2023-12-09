@@ -14,6 +14,12 @@ import java.util.List;
 public class SpawnerGuiManager {
   private final PlayerSpawner owner;
 
+  private static final int[] ALLOWED_SLOT = {
+      10, 11, 12, 13, 14, 15, 16,
+      19, 20, 21, 22, 23, 24, 25,
+      28, 29, 30, 31, 32, 33, 34,
+  };
+
   public SpawnerGuiManager(PlayerSpawner owner) {
     this.owner = owner;
   }
@@ -26,30 +32,35 @@ public class SpawnerGuiManager {
     Inventory inv = Bukkit.createInventory(null, 9 * 5, Utils.GUI_NAME + " - Page " + page +"/" + getMaxPage());
     Utils.setBorders(inv);
     setSpawners(page, inv);
+    ItemBuilder nextBuilder = new ItemBuilder(Material.ARROW);
+    ItemBuilder previousPage = new ItemBuilder(Material.ARROW);
+    ItemBuilder homePage = new ItemBuilder(Material.NETHER_STAR);
 
     if(page == 1) {
-      ItemBuilder nextPage = new ItemBuilder(Material.ARROW);
-      nextPage.setName("§2Page: " + (page + 1));
-      inv.setItem(41, nextPage.build());
+      if (getMaxPage() == 1) {
+        homePage.setName("§bRafraichir");
+        inv.setItem(40, homePage.build());
+      } else {
+        nextBuilder.setName("§9Page: " + (page + 1));
+        inv.setItem(41, nextBuilder.build());
+
+        homePage.setName("§bPage principale");
+        inv.setItem(40, homePage.build());
+      }
     } else if (page == getMaxPage()) {
-      ItemBuilder previousPage = new ItemBuilder(Material.ARROW);
-      previousPage.setName("§2Page: " + (page - 1));
+      previousPage.setName("§9Page: " + (page - 1));
       inv.setItem(39, previousPage.build());
 
-      ItemBuilder homePage = new ItemBuilder(Material.NETHER_STAR);
-      homePage.setName("§aPage principale");
+      homePage.setName("§bPage principale");
       inv.setItem(40, homePage.build());
     } else {
-      ItemBuilder nextBuilder = new ItemBuilder(Material.ARROW);
-      nextBuilder.setName("§2Page: " + (page + 1));
+      nextBuilder.setName("§9Page: " + (page + 1));
       inv.setItem(41, nextBuilder.build());
 
-      ItemBuilder previousPage = new ItemBuilder(Material.ARROW);
-      previousPage.setName("§2Page: " + (page - 1));
+      previousPage.setName("§9Page: " + (page - 1));
       inv.setItem(39, previousPage.build());
 
-      ItemBuilder homePage = new ItemBuilder(Material.NETHER_STAR);
-      homePage.setName("§aPage principale");
+      homePage.setName("§bPage principale");
       inv.setItem(40, homePage.build());
     }
 
@@ -58,11 +69,6 @@ public class SpawnerGuiManager {
 
   public void setSpawners(int page, Inventory inv) {
     int slot = 0;
-    Integer[] allowedSlots = {
-        10, 11, 12, 13, 14, 15, 16,
-        19, 20, 21, 22, 23, 24, 25,
-        28, 29, 30, 31, 32, 33, 34,
-    };
 
     List<Spawner> spawners = new ArrayList<>(this.owner.getSpawners().values()).subList((page - 1) * 21, Math.min(page * 21, this.owner.getSpawners().size()));
     for (Spawner spawner : spawners) {
@@ -71,7 +77,7 @@ public class SpawnerGuiManager {
         itemBuilder.setLore("§aType: " + spawner.getType().name(), "§aLevel: " + spawner.getLevel(), "", "§bPlacé: " + (spawner.isPlaced() ? "§aOui" : "§cNon"), (spawner.isPlaced() ? "§aX: " + spawner.getLocation().getX() + " §aY: " + spawner.getLocation().getY() + " §aZ: " + spawner.getLocation().getZ() : ""), "", "§aPremium: " + (spawner.isPremium() ? "§2Oui :)" : "§cNon :("), "§8Premium = Si le spawneur peut être cassé ou non, ou d'autre avantages.", "", "§aCliquez pour sélectionner ce spawner.");
         itemBuilder.setGlow(spawner.isPlaced());
 
-        inv.setItem(allowedSlots[slot], itemBuilder.build());
+        inv.setItem(ALLOWED_SLOT[slot], itemBuilder.build());
         slot++;
     }
   }

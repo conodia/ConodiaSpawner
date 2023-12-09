@@ -9,6 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -75,18 +76,21 @@ public class SpawnerListener implements Listener {
 
       Spawner spawner = ConodiaSpawner.getInstance().getPlacedSpawners().get(block.getLocation());
 
-      if (spawner != null) {
+      if (spawner == null) {
+        JSONObject payload = ConodiaGameAPI.getInstance().getApiManager().get("/spawners/coords/" + block.getLocation().getBlockX() + "/" + block.getLocation().getBlockY() + "/" + block.getLocation().getBlockZ() + "/" + block.getLocation().getWorld().getName(), new JSONObject());
+
+        if (payload != null && payload.get("message") == "Spawner not found.") {
+          PlayerSpawner owner = ConodiaSpawner.getInstance().getPlayerSpawners().get(UUID.fromString(payload.get("player_id").toString()));
+          removeSpawner(Spawner.from((JSONObject) payload.get("spawner"), owner), block, event);
+        } else {
+          final EntityType type = ((CreatureSpawner) block.getState()).getSpawnedType();
+          Spawner spawnerGen = new Spawner(0, null, type, 0, block.getLocation(), false);
+          block.getWorld().dropItemNaturally(block.getLocation(), spawnerGen.toItem());
+        }
+      } else {
         removeSpawner(spawner, block, event);
-        continue;
       }
-
-      JSONObject payload = ConodiaGameAPI.getInstance().getApiManager().get("/spawners/coords/" + block.getLocation().getBlockX() + "/" + block.getLocation().getBlockY() + "/" + block.getLocation().getBlockZ() + "/" + block.getLocation().getWorld().getName(), new JSONObject());
-
-      if (payload != null) {
-        PlayerSpawner owner = ConodiaSpawner.getInstance().getPlayerSpawners().get(UUID.fromString(payload.get("player_id").toString()));
-        removeSpawner(Spawner.from((JSONObject) payload.get("spawner"), owner), block, event);
-      }
-     }
+    }
   }
 
   private void removeSpawner(Spawner spawner, Block block, EntityExplodeEvent event) {
